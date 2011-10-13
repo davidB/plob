@@ -83,7 +83,11 @@ object builders {
       "%s - %s :%s:%s:%s".format(m.level, m.who, apath.path, m.where.getOrElse(""), m.what)
     }
     logs.foreach{ x => println(x) }
-    println("Fatal : %d, Errors : %d, Warnings : %d".format(fatalCnt, errorCnt, warningCnt))
+    val level = if (fatalCnt > 0) { Level.Fatal }
+      else if (errorCnt > 0) { Level.Error }
+      else if (warningCnt > 0) { Level.Warning }
+      else { Level.Info }
+    println("%s - plob ::: Fatal : %d, Errors : %d, Warnings : %d".format(level, fatalCnt, errorCnt, warningCnt))
   }
 }
 
@@ -152,6 +156,7 @@ class AnnotedPathGenerator(val rootDir : Path) {
      
      def register(dir : Path) = {
        val wkey = dir.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE)
+       println("++ ", (wkey -> dir))
        watchKeys += (wkey -> dir)
      }
 
@@ -160,10 +165,29 @@ class AnnotedPathGenerator(val rootDir : Path) {
     def waitEvent(watchService : WatchService) {
       import scala.collection.JavaConversions._
       println("waiting FS event ...")
-      val watchKey = watchService.take() // this call is blocking until events are present
-      val dir = watchKeys(watchKey)
-      // poll for file system events on the WatchKey
-      val apathsBefore = watchKey.pollEvents().toSeq.map{ x => toAnnotedPath(dir, x) }
+
+      val wkey0 = watchService.take() // this call is blocking until events are present
+      val wkeys = ListBuffer[WatchKey](wkey0)
+      println(">>> ", wkey0)
+      
+      // TODO refactor
+      // grab all enqueued changes
+      var wkeyi : WatchKey = null
+      do {
+        wkeyi = watchService.poll()
+        if (wkeyi != null) wkeys += wkeyi
+      } while(wkeyi != null)
+      
+      // poll for file system events on the WatchKeys
+      val apathsBefore = for {
+        wkey <- wkeys.distinct
+        dir <- List(watchKeys(wkey))
+        event <- wkey.pollEvents().toSeq
+      } yield {
+        println(">> ", dir, wkey)
+        toAnnotedPath(dir, event)
+      }
+      
       println("build trigger by", apathsBefore)
       // watch newly created directory
       for (apath <- apathsBefore) {
@@ -177,9 +201,15 @@ class AnnotedPathGenerator(val rootDir : Path) {
       resultsCallback(apathsAfter)
  
       // if the watched directed gets deleted, get out of run method
-      if (!watchKey.reset()) {
-        //System.out.println("No longer valid");
-        watchKey.cancel()
+      for (wkey <- wkeys) {
+        if (!wkey.reset()) {
+          //System.out.println("No longer valid");
+          wkey.cancel()
+          watchKeys -= (wkey)
+        }
+      }
+      
+      if (watchKeys.isEmpty) {
         watchService.close()
       } else {
         waitEvent(watchService)
