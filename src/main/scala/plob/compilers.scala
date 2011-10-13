@@ -20,8 +20,15 @@ object Compiler_CoffeeScript {
       dest.mkdirs()
       val cmdline = "coffee" :: "-o" :: dest.getAbsolutePath :: options.toList ::: files 
       back = AnnotedPath(Change.Modified, inputDir, Set(Marker("coffee", "cmdline :" + cmdline.mkString("'", "' '", "'"), Level.Debug))) :: back
-      val stdout: String = Process(cmdline, inputDir.toFile) !!;
-      println(stdout)
+      try {
+        val stdout: String = Process(cmdline, inputDir.toFile) !!;
+        println(stdout)
+      } catch {
+        case t => {
+          t.printStackTrace()
+          back = AnnotedPath(Change.Modified, inputDir, Set(Marker("coffee", "%s:%s".format(t.getClass, t.getMessage), Level.Error))) :: back
+        }
+      }
       back
     }
   }
