@@ -36,11 +36,12 @@ object builders {
   
   // TODO implement
   implicit def toPath(s : String) : Path = {
-    FileSystems.getDefault().getPath(s);
+    FileSystems.getDefault().getPath(s).normalize()
   }
   
   def toRelativeFilePaths(v : AnnotedPathS, cwd : Path) : Traversable[String] = {
-    v.map{x => cwd.relativize(x.path).toString }
+    val cwdn = cwd.normalize() // normalize else "toto/.".relativize("toto/x") => "../x" instead of "x"
+    v.map{x => cwdn.relativize(x.path).toString }
   }
   
   def identity : Builder = { a => a }
@@ -121,10 +122,13 @@ object Change {
 
 case class AnnotedPath(change : Change, path : Path, markers : Set[Marker] = Set.empty)
 
-class AnnotedPathGenerator(val rootDir : Path) {
+class AnnotedPathGenerator(rootDir : Path) {
+  
+  private val _rootDir = rootDir.normalize()
+  
   def all : builders.AnnotedPathS = {
     val back = new ListBuffer[AnnotedPath]() 
-    Files.walkFileTree(rootDir, new SimpleFileVisitor[Path]() {
+    Files.walkFileTree(_rootDir, new SimpleFileVisitor[Path]() {
       override def visitFile(f : Path, attrs : BasicFileAttributes) : FileVisitResult = {
         //println("...", f, f.getParent, f.getRoot())
         back += AnnotedPath(Change.FakeModified, f)
@@ -142,7 +146,7 @@ class AnnotedPathGenerator(val rootDir : Path) {
       case StandardWatchEventKinds.ENTRY_DELETE => Change.Deleted
       case _ => Change.Modified
     }
-    AnnotedPath(status, dir.resolve(event.context().asInstanceOf[Path]))
+    AnnotedPath(status, dir.resolve(event.context().asInstanceOf[Path]).normalize())
   }
 
   def runAllOnce(build : builders.Builder, resultsCallback : (builders.AnnotedPathS) => Unit) {
@@ -151,7 +155,7 @@ class AnnotedPathGenerator(val rootDir : Path) {
   }
   
   def watch(build : builders.Builder, resultsCallback : (builders.AnnotedPathS) => Unit) {
-     val watchService = rootDir.getFileSystem().newWatchService()
+     val watchService = _rootDir.getFileSystem().newWatchService()
      var watchKeys = Map.empty[WatchKey,Path]
      
      def register(dir : Path) = {
@@ -217,7 +221,7 @@ class AnnotedPathGenerator(val rootDir : Path) {
     }
 
     // register dir and subdirectory
-    Files.walkFileTree(rootDir, new SimpleFileVisitor[Path]() {
+    Files.walkFileTree(_rootDir, new SimpleFileVisitor[Path]() {
       override def preVisitDirectory(dir : Path, attrs : BasicFileAttributes) : FileVisitResult = {
         register(dir)
         FileVisitResult.CONTINUE
