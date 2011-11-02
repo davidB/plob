@@ -36,7 +36,7 @@ object builders {
   
   // TODO implement
   implicit def toPath(s : String) : Path = {
-    FileSystems.getDefault().getPath(s).normalize()
+    FileSystems.getDefault().getPath(s)//.normalize()
   }
   
   def toRelativeFilePaths(v : AnnotedPathS, cwd : Path) : Traversable[String] = {
