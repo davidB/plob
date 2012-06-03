@@ -24,6 +24,8 @@ import java.nio.file.WatchKey
 /**
  * @author David Bernard
  */
+//TODO add testcase
+//TODO provide build definition loader from FS (like rc.d or init.d on linux, ...)
 object builders {
   type Filter = AnnotedPath => Boolean
   type AnnotedPathS = Traversable[AnnotedPath]
@@ -33,17 +35,16 @@ object builders {
     val matcher = FileSystems.getDefault.getPathMatcher(s)
     return { x => matcher.matches(x.path) }
   }
-  
-  // TODO implement
+
   implicit def toPath(s : String) : Path = {
     FileSystems.getDefault().getPath(s)//.normalize()
   }
-  
+
   def toRelativeFilePaths(v : AnnotedPathS, cwd : Path) : Traversable[String] = {
     val cwdn = cwd.normalize() // normalize else "toto/.".relativize("toto/x") => "../x" instead of "x"
     v.map{x => cwdn.relativize(x.path).toString }
   }
-  
+
   def identity : Builder = { a => a }
 
   def route(vs : (Filter, Builder)*) : Builder = { apaths =>
@@ -58,10 +59,10 @@ object builders {
       acc ++ mapping._2(mapping._1)
     }
   }
-  
+
   def pipe(vs : Builder*) : Builder = { apaths =>
     vs.foldLeft(apaths){ (acc, builder) =>
-      apaths ++ builder(apaths)
+      builder(acc)
     }
   }
 
@@ -73,7 +74,7 @@ object builders {
     val logs = for {
       apath <- apaths
       if (! apath.markers.isEmpty )
-      m <- apath.markers  
+      m <- apath.markers
     } yield {
       m.level match {
         case Level.Fatal => fatalCnt += 1
@@ -81,14 +82,14 @@ object builders {
         case Level.Warning => warningCnt += 1
         case _ => ()
       }
-      "%s - %s :%s:%s:%s".format(m.level, m.who, apath.path, m.where.getOrElse(""), m.what)
+      "%s\t|%s\t|%s|%s|%s".format(m.level, m.who, apath.path, m.where.getOrElse(""), m.what)
     }
     logs.foreach{ x => println(x) }
     val level = if (fatalCnt > 0) { Level.Fatal }
       else if (errorCnt > 0) { Level.Error }
       else if (warningCnt > 0) { Level.Warning }
       else { Level.Info }
-    println("%s - plob ::: Fatal : %d, Errors : %d, Warnings : %d".format(level, fatalCnt, errorCnt, warningCnt))
+    println("%s\t|plob\t|||Fatal : %d, Errors : %d, Warnings : %d".format(level, fatalCnt, errorCnt, warningCnt))
   }
 }
 
@@ -123,11 +124,11 @@ object Change {
 case class AnnotedPath(change : Change, path : Path, markers : Set[Marker] = Set.empty)
 
 class AnnotedPathGenerator(rootDir : Path) {
-  
+
   private val _rootDir = rootDir.normalize()
-  
+
   def all : builders.AnnotedPathS = {
-    val back = new ListBuffer[AnnotedPath]() 
+    val back = new ListBuffer[AnnotedPath]()
     Files.walkFileTree(_rootDir, new SimpleFileVisitor[Path]() {
       override def visitFile(f : Path, attrs : BasicFileAttributes) : FileVisitResult = {
         //println("...", f, f.getParent, f.getRoot())
@@ -135,10 +136,10 @@ class AnnotedPathGenerator(rootDir : Path) {
         FileVisitResult.CONTINUE
       }
     })
-    back // .toSeq 
+    back // .toSeq
   }
   //def watcher :(builders : builders.Builder,)
-  
+
   //TODO manage StandardWatchEventKinds.OVERFLOW
   private def toAnnotedPath(dir : Path, event : WatchEvent[_]) : AnnotedPath = {
     val status = event.kind match {
@@ -153,11 +154,11 @@ class AnnotedPathGenerator(rootDir : Path) {
     val apathsAfter = build(all)
     resultsCallback(apathsAfter)
   }
-  
+
   def watch(build : builders.Builder, resultsCallback : (builders.AnnotedPathS) => Unit) {
      val watchService = _rootDir.getFileSystem().newWatchService()
      var watchKeys = Map.empty[WatchKey,Path]
-     
+
      def register(dir : Path) = {
        val wkey = dir.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE)
        println("++ ", (wkey -> dir))
@@ -173,7 +174,7 @@ class AnnotedPathGenerator(rootDir : Path) {
       val wkey0 = watchService.take() // this call is blocking until events are present
       val wkeys = ListBuffer[WatchKey](wkey0)
       println(">>> ", wkey0)
-      
+
       // TODO refactor
       // grab all enqueued changes
       var wkeyi : WatchKey = null
@@ -181,7 +182,7 @@ class AnnotedPathGenerator(rootDir : Path) {
         wkeyi = watchService.poll()
         if (wkeyi != null) wkeys += wkeyi
       } while(wkeyi != null)
-      
+
       // poll for file system events on the WatchKeys
       val apathsBefore = for {
         wkey <- wkeys.distinct
@@ -191,7 +192,7 @@ class AnnotedPathGenerator(rootDir : Path) {
         println(">> ", dir, wkey)
         toAnnotedPath(dir, event)
       }
-      
+
       println("build trigger by", apathsBefore)
       // watch newly created directory
       for (apath <- apathsBefore) {
@@ -200,10 +201,10 @@ class AnnotedPathGenerator(rootDir : Path) {
         }
       }
       //TODO stop watching deleted directory (and subdirectory)
-      
+
       val apathsAfter = build(apathsBefore)
       resultsCallback(apathsAfter)
- 
+
       // if the watched directed gets deleted, get out of run method
       for (wkey <- wkeys) {
         if (!wkey.reset()) {
@@ -212,7 +213,7 @@ class AnnotedPathGenerator(rootDir : Path) {
           watchKeys -= (wkey)
         }
       }
-      
+
       if (watchKeys.isEmpty) {
         watchService.close()
       } else {
@@ -226,7 +227,7 @@ class AnnotedPathGenerator(rootDir : Path) {
         register(dir)
         FileVisitResult.CONTINUE
       }
-    })    
+    })
     waitEvent(watchService)
   }
 }

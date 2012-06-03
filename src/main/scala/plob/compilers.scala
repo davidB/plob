@@ -4,24 +4,25 @@ package plob
 
 object Compiler_CoffeeScript {
   import java.nio.file.Path
-  
+
   // TODO implement
   // TODO monitor outputDir, if deleted => rebuild all (how ?)
   def apply(inputDir : Path, outputDir : Path, options : Seq[String] = Nil) : builders.Builder = {
     //TODO init (eg create outputDir),
     //TODO check context (eg coffee executable existe, else warning and fallback to rhino + ...)
     //TODO return a Validation or a Logger ??
-    //TODO manage Deleted 
+    //TODO manage Deleted
     return { apaths : builders.AnnotedPathS =>
       import scala.sys.process.Process
       var back = apaths.toList
       val files = builders.toRelativeFilePaths(apaths, inputDir).toList
       val dest = outputDir.toFile
       dest.mkdirs()
-      val cmdline = "coffee" :: "-o" :: dest.getAbsolutePath :: options.toList ::: files 
+      val cmdline = "coffee" :: "-o" :: dest.getAbsolutePath :: options.toList ::: files
       back = AnnotedPath(Change.Modified, inputDir, Set(Marker("coffee", "cmdline :" + cmdline.mkString("'", "' '", "'"), Level.Debug))) :: back
       try {
         val stdout: String = Process(cmdline, inputDir.toFile) !!;
+        // TODO parse stdout and stderr to generate right AnnotedPath (provide and helper for common case like done by editor)
         println(stdout)
       } catch {
         case t => {
@@ -38,7 +39,7 @@ object Compiler_CoffeeScript {
 
 object Compiler_Jade {
   import java.nio.file.Path
-  
+
   // TODO implement
   def apply(inputDir : Path, outputDir : Path, options : Seq[String] = Nil) : builders.Builder = { apaths : builders.AnnotedPathS =>
     import scala.sys.process.Process
