@@ -4,16 +4,16 @@
 //exec scala -save -cp "$DIR/tools/lib/plob-0.0.1-SNAPSHOT.jar" $0 $DIR $SCRIPT
 //::!#
 
-import plob.AnnotedPathGenerator
 import plob._
 import plob.builders._
 
 object Main {
   def main(args : Array[String]) {
-    main2(args)
+    main2(args.contains("--watch"))
+    println("END")
   }
 
-  def main2(args : Array[String]) {
+  def main2(isWatching : Boolean) {
     var build = builders.pipe(
       builders.route(
         ("glob:src/main/coffee/**.coffee", Compiler_CoffeeScript("src/main/coffee", "target/webapp/_scripts", List("--bare")))
@@ -25,9 +25,9 @@ object Main {
         //, VowsRunner("src/test/coffee", "glob:**/*.js")
     )
     val input = new AnnotedPathGenerator("src")
-    val apaths = build(input.all)
-    println("------------------------")
-    println("result", apaths.filter(!_.markers.isEmpty))
-    println("hello")
+    isWatching match {
+      case true  => input.watch(build, basicResultsConsolePrinter)
+      case false => input.runAllOnce(build, basicResultsConsolePrinter)
+    }
   }
 }
