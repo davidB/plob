@@ -1,11 +1,17 @@
-package plob
+package plob.b
+
+import java.nio.file.Files
+import java.nio.file.LinkOption
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
+import plob.Change
+import plob.builders
+import plob.AnnotedPath
 
 object Misc_Sync {
-  import java.nio.file.Files
-  import java.nio.file.LinkOption
-  import java.nio.file.Path
-  import java.nio.file.StandardCopyOption
 
+  def apply(inputDir : Path, inputFilter : builders.Filter, outputDir : Path) : builders.Builder = builders.route((inputFilter, apply(inputDir, outputDir)))
+  
   def apply(inputDir : Path, outputDir : Path) : builders.Builder = { apaths : builders.AnnotedPathS =>
     val n = for (apath <- apaths) yield {
       val src = apath.path
@@ -25,3 +31,4 @@ object Misc_Sync {
   }
 
 }
+
