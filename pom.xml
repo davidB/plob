@@ -1,9 +1,8 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.alchim31</groupId>
 	<artifactId>plob</artifactId>
-	<version>0.1.0-SNAPSHOT</version>
+	<version>0.2.0-SNAPSHOT</version>
 	<name>${project.artifactId}</name>
 	<description>Pipe Line Of Builder : an experimental (event drivern /reactive) build tool</description>
 	<inceptionYear>2011</inceptionYear>
@@ -28,8 +27,14 @@
 			<artifactId>scala-library</artifactId>
 			<version>${scala.version}</version>
 		</dependency>
-
-		<!-- Test -->
+		<dependency>
+			<groupId>com.google.javascript</groupId>
+			<artifactId>closure-compiler</artifactId>
+			<version>r2388</version>
+			<optional>true</optional>
+			<scope>provided</scope>
+		</dependency>
+        <!-- Test -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

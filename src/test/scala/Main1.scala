@@ -1,7 +1,7 @@
 //#!/bin/sh
 //SCRIPT="$(cd "${0%/*}" 2>/dev/null; echo "$PWD"/"${0##*/}")"
 //DIR=`dirname "${SCRIPT}"}`
-//exec scala -save -cp "$DIR/tools/lib/plob-0.0.1-SNAPSHOT.jar" $0 $DIR $SCRIPT
+//exec scala -save -cp "$DIR/tools/lib/plob-0.2.0-SNAPSHOT.jar" $0 $DIR $SCRIPT
 //::!#
 
 import plob._
@@ -16,9 +16,9 @@ object Main {
   def main2(isWatching : Boolean) {
     var build = builders.pipe(
       builders.route(
-        ("glob:src/main/coffee/**.coffee", Compiler_CoffeeScript("src/main/coffee", "target/webapp/_scripts", List("--bare")))
-        , ("glob:src/main/jade/**.jade", Compiler_Jade("src/main/jade", "target/webapp"))
-        , ("glob:src/main/webapp/**", Misc_Sync("src/main/webapp", "target/webapp"))
+        ("glob:src/main/coffee/**.coffee", b.Compiler_CoffeeScript("src/main/coffee", "target/webapp/_scripts", List("--bare")))
+        , ("glob:src/main/jade/**.jade", b.Compiler_Jade("src/main/jade", "target/webapp"))
+        , ("glob:src/main/webapp/**", b.Misc_Sync("src/main/webapp", "target/webapp"))
       )
         //, JadeCompiler("src/main/jade", "glob:**/*.jade", "target/webapp"),
         //, CoffeeScriptCompiler2("src/test/coffee", "glob:**/*.coffee", "target/webapp"),
