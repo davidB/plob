@@ -36,3 +36,8 @@
 
 - Integration : vim, eclipse, maven
 
+## Communication
+
+- notify/update https://github.com/codylindley/frontend-tools
+- write blog
+- write documentation
