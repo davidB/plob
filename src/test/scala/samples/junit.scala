@@ -21,6 +21,9 @@ class AppTest {
       assertEquals(p1.relativize(p0).toString, "../bar.txt")
       assertEquals(p0.relativize(p1).toString, "../bar2.txt")
       assertEquals(p0.getParent.relativize(p1).toString, "bar2.txt")
+      
+      val p2 = FileSystems.getDefault.getPath("${fname}.too")
+      assertEquals(p2.toString, "${fname}.too")
     }
 
 }
