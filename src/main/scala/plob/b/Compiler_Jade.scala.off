@@ -1,14 +1,15 @@
 package plob.b
 
 import plob._
+import plob.fs._
 import java.nio.file.Path
 
 object Compiler_Jade {
   // TODO implement
-  def apply(inputDir : Path, outputDir : Path, options : Seq[String] = Nil) : builders.Builder = { apaths : builders.AnnotedPathS =>
+  def apply(inputDir : Path, outputDir : Path, options : Seq[String] = Nil) : stages.Stage = { run : stages.Run =>
     import scala.sys.process.Process
     var back = apaths.toList
-    val files = builders.toRelativeFilePaths(apaths, inputDir).toList
+    val files = stages.toRelativeFilePaths(apaths, inputDir).toList
     val dest = outputDir.toFile
     dest.mkdirs()
     val cmdline = "jade" ::  "--out" :: dest.getAbsolutePath :: options.toList ::: files

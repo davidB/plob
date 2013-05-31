@@ -1,12 +1,8 @@
 package plob.b
 
-import java.nio.file.Files
-import java.nio.file.LinkOption
-import java.nio.file.StandardCopyOption
 import plob._
 
-//class Misc_Sync(var outputDir : RPath, val name : String = "sync") extends StageCtrl{
-//  ctrl.add("outputDir", "targetDirectory", () => outputDir, toBasicLogs((s :String) => outputDir = s))
+//class Reader_Article(var outputDir : RPath, val name : StageName = getClass.getSimpleName) extends StageCtrl {
 //
 //  private def filterNotUpdated(e : Entity, stage : StageName) : Boolean = {
 //    e.as[Change] match {
@@ -19,14 +15,15 @@ import plob._
 //  }
 //
 //  //TODO manage error
-//  val stage = (run : Run) => {
+//  val stage : Stage = { run : Run =>
 //    for {
 //      entity <- run.entities
-//      src <- entity.as[RPath]
+//      src <- entity.as[FileContent]
 //      if filterNotUpdated(entity, name)
 //    } {
-//      val dest = src.copy(parent = Option(outputDir))
-//      val destChange = entity.asOrElse[Change](Change.FakeModified(run.ts))
+//      val dest = InputsOutputs.findOuts(entity, name, true).head
+//      val destArticle = src.copy(parent = outputDir)
+//      val destChange = dest.asOrElse[Change](Change.FakeModified(run.ts))
 //      (src.toFile.isDirectory, destChange) match {
 //        case (_, _ : Change.Deleted) => Files.deleteIfExists(dest) //TODO delete recursively for Directory
 //        case (true, _) => dest.toFile.mkdirs
@@ -35,10 +32,8 @@ import plob._
 //          Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES, LinkOption.NOFOLLOW_LINKS)
 //        }
 //      }
-//      InputsOutputs.findOuts(entity, name, true).foreach { _.link(dest).link(destChange) }
+//      InputsOutputs.addInOut(entity, name, new Entity().link(dest).link(destChange))
 //    }
 //    run
 //  }
-//
 //}
-
