@@ -2,9 +2,9 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.alchim31</groupId>
 	<artifactId>plob</artifactId>
-	<version>0.2.1-SNAPSHOT</version>
+	<version>0.3.0-SNAPSHOT</version>
 	<name>${project.artifactId}</name>
-	<description>Pipe Line Of Builder : an experimental (event drivern /reactive) build tool</description>
+	<description>Pipe Line Of Builders : an experimental (push / event driven / reactive) build tool</description>
 	<inceptionYear>2011</inceptionYear>
 	<licenses>
 		<license>
@@ -19,6 +19,7 @@
 		<maven.compiler.target>1.7</maven.compiler.target>
 		<encoding>UTF-8</encoding>
 		<scala.version>2.10.1</scala.version>
+		<scala.compat.version>2.10</scala.compat.version>
 	</properties>
 
 	<dependencies>
@@ -27,13 +28,53 @@
 			<artifactId>scala-library</artifactId>
 			<version>${scala.version}</version>
 		</dependency>
+		<!-- dependency>
+			<groupId>org.rogach</groupId>
+			<artifactId>scallop_${scala.compat.version}</artifactId>
+			<version>0.9.2</version>
+		</dependency-->
 		<dependency>
+			<groupId>org.scalaz</groupId>
+			<artifactId>scalaz-core_${scala.compat.version}</artifactId>
+			<version>7.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.parboiled</groupId>
+			<artifactId>parboiled-scala_${scala.compat.version}</artifactId>
+			<version>1.1.5</version>
+		</dependency>
+		<!-- dependency>
+			<groupId>com.assembla.scala-incubator</groupId>
+			<artifactId>graph-core_${scala.compat.version}</artifactId>
+			<version>1.6.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.tinkerpop.blueprints</groupId>
+			<artifactId>blueprints-core</artifactId>
+			<version>2.3.0</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>jettison</artifactId>
+					<groupId>org.codehaus.jettison</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency-->
+		<!-- builders -->
+		<dependency>
+			<groupId>org.freemarker</groupId>
+			<artifactId>freemarker</artifactId>
+			<version>2.3.19</version>
+			<optional>true</optional>
+			<scope>provided</scope>
+		</dependency>
+		
+		<!-- dependency>
 			<groupId>com.google.javascript</groupId>
 			<artifactId>closure-compiler</artifactId>
 			<version>r2388</version>
 			<optional>true</optional>
 			<scope>provided</scope>
-		</dependency>
+		</dependency-->
         <!-- Test -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -57,7 +98,7 @@
 							<goal>compile</goal>
 							<goal>testCompile</goal>
 						</goals>
-            <configuration>
+						<configuration>
 							<args>
 								<arg>-make:transitive</arg>
 								<arg>-dependencyfile</arg>
